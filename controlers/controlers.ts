@@ -7,7 +7,7 @@ import { Subject, Teacher,Student, Errormongo} from "../mongo/types.ts";
 
 
 //Gestion de errores
-export const geterror = (error: Object): Errormongo[]=>{
+export const geterror = (error: any): Errormongo[]=>{
 
     const EM: Errormongo = error as Errormongo
     if(EM.code){
@@ -23,7 +23,7 @@ export const geterror = (error: Object): Errormongo[]=>{
 
             return {
                 code: 1,
-                errorOrigin: "Mongo Error",
+                errorOrigin: "Mongoose Error",
                 Error: EM._message,
                 path: EM.errors?.[elem].properties?.path,
                 Cause: EM.errors?.[elem]._message,
@@ -33,8 +33,39 @@ export const geterror = (error: Object): Errormongo[]=>{
         })
 
         return errores
+    }else if(error.name ==="CastError"){
+        if( error.kind ==="ObjectId" ){
+            console.log(error);
+            
+            const errores = [{
+                code: 2,
+                errorOrigin: "Mongo Error id",
+                Error: "La id esta mal introducida, ha de tener 24 caracteres",
+                path: error.path,
+                Cause: "Invalid _id",
+                value: error.value._id,
+                type: error.name
+            }]
+            return errores
+        }
+        return [error]
+        
+    }else if(error.message.includes("Cannot destructure property '_id'")){
+        const errores = [{
+            code: 3,
+            errorOrigin: "Request",
+            Error: "La id no se encuentra en la base de datos",
+            path: error.path,
+            Cause: "Invalid property",
+            value: error.value,
+            type: "Not Found"
+        }]
+        return errores
+        
     }
-    return [EM]
+    console.log(error.message);
+    
+    return [{code: 0},EM]
 }
 
 export const getsubject = async ( elem: Subjectmodeltype): Promise<Subject> => {
@@ -67,9 +98,10 @@ export const getsubject = async ( elem: Subjectmodeltype): Promise<Subject> => {
 export const getstudent = async ( elem: Studentmodeltype): Promise<Student> => {
 
 
-    const {_id,name,email,subjects} = elem
+    const {_id} = elem
 
-    const subs: Subject[] = await Subjectmodel.find({_id: {$in: subjects}})
+    const est = await Studentmodel.findById(_id)
+    const subs: Subject[] = await Subjectmodel.find({_id: {$in: est!.subjects}})
     const sub = await  Promise.all(subs.map(async (elem)=>{
         const teacher = await Teachermodel.findById(elem.teacher)
         return {
@@ -86,8 +118,8 @@ export const getstudent = async ( elem: Studentmodeltype): Promise<Student> => {
 
     return {
         id: _id.toString(),
-        name: name,
-        email: email,
+        name: est!.name,
+        email: est!.email,
         subjects: sub
     }
 }
@@ -128,11 +160,10 @@ export const getteacher = async ( elem: Teachermodeltype): Promise<Teacher> => {
     
 }
 
-export const updatestudent = async ( elem: Studentmodeltype, id: string): Promise<Student> => {
+export const updatestudent = async ( elem: Studentmodeltype, _id: string): Promise<Student> => {
 
 
-    const {name,email} = elem
-    const estudiante = await Studentmodel.findByIdAndUpdate({_id: id},{name: name, email: email})
+    const estudiante = await Studentmodel.findByIdAndUpdate({_id: _id},{name: elem.name, email: elem.email, $push: { subjects: elem.subjects}})
     const final = await getstudent(estudiante!)
     return  final
 

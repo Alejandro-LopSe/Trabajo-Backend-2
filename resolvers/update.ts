@@ -1,20 +1,21 @@
+// deno-lint-ignore-file
 // @deno-types="npm:@types/express@4"
 import { Request, Response } from "express";
-import { Error, Student,Subject,Teacher } from "../mongo/types.ts";
+import {  Errormongo, Student,Subject,Teacher } from "../mongo/types.ts";
 import { Studentmodel, Studentmodeltype } from "../mongo/models/student.ts";
 import { Teachermodeltype , Teachermodel} from "../mongo/models/teacher.ts";
 import { Subjectmodel, Subjectmodeltype } from "../mongo/models/subject.ts";
-import { getstudent, getsubject, getteacher, updatestudent } from "../controlers/controlers.ts";
+import { geterror, getsubject, getteacher, updatestudent } from "../controlers/controlers.ts";
 
 
 export const base =  (_req: Request, res: Response)=>{
     res.status(200).send("Operativo")
 }
-export const update_student = async (req: Request<{},{},Studentmodeltype>, res: Response<Student | Error>)=>{
+export const update_student = async (req: Request<{},{},Studentmodeltype>, res: Response<Student | Errormongo[]>)=>{
 
     try{
 
-        const {id,name,email,subjects} = req.body
+        const {_id,name,email,subjects} = req.body
         
         const student = new Studentmodel({
             name: name,
@@ -23,19 +24,17 @@ export const update_student = async (req: Request<{},{},Studentmodeltype>, res: 
         })
         
         
-        const final = await updatestudent(student,id)
+        const final = await updatestudent(student,_id)
         
         res.status(200).send(final)
 
     }catch(error){
-        res.status(400).send({
-            code: 400,
-            message: "Error de validacion",
-            causa: error 
-        })
+        const me: Errormongo[] = geterror(error)
+
+        res.status(400).send(me)
     }
 }
-export const post_teacher= async (req: Request<{},{},Teachermodeltype>, res: Response<Teacher | Error>)=>{
+export const post_teacher= async (req: Request<{},{},Teachermodeltype>, res: Response<Teacher | Errormongo[]>)=>{
 
     try{
 
@@ -51,17 +50,13 @@ export const post_teacher= async (req: Request<{},{},Teachermodeltype>, res: Res
 
 
     }catch(error){
-        
-        res.status(400).send({
-            code: 400,
-            message: "Error de validacion",
-            causa: error.errors[`${Object.keys(error.errors).at(0)}`].message ,
-            value: error.errors[`${Object.keys(error.errors).at(0)}`].value
-        })
+        const me: Errormongo[] = geterror(error)
+
+        res.status(400).send(me)
         
     }
 }
-export const post_subject= async (req: Request<{},{},Subjectmodeltype>, res: Response<Subject | Error>)=>{
+export const post_subject= async (req: Request<{},{},Subjectmodeltype>, res: Response<Subject | Errormongo[]>)=>{
 
     try{
         const {name, year,teacher,students} = req.body
@@ -77,10 +72,9 @@ export const post_subject= async (req: Request<{},{},Subjectmodeltype>, res: Res
         res.status(200).send(final)
 
     }catch(error){
-        res.status(400).send({
-            code: 400,
-            message: error.message
-        })
+        const me: Errormongo[] = geterror(error)
+
+        res.status(400).send(me)
     }
 }
 

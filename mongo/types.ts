@@ -1,3 +1,4 @@
+// deno-lint-ignore-file
 export type Student = {
     id: string
     name: string
