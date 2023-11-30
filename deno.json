@@ -1,6 +1,7 @@
 {
   "tasks": {
-    "dev": "deno run --watch --allow-all --env main.ts"
+    "dev": "deno run --watch --allow-all --env main.ts",
+    "deploy": "deployctl deploy --token=ddp_pybLtXGya3GD92IxHj7BZXljGs9iRx1716Vm --project=Trabajo-Final --prod ./main.ts"
   },
   "imports": {
     "mongoose": "npm:mongoose@8.0.1",
