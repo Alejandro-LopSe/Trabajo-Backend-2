@@ -27,3 +27,25 @@ export type Error = {
     value?: string
     path?: string
 }
+
+//Tipo para gestion de errores
+export type Errormongo = {
+    code?: number
+    errorOrigin?: string
+    Error?: string
+    keyValue?: {}
+    errors?: {
+        [key: string]: {
+            properties?:  {
+                message?: string
+                type?: string
+                path?: string
+                value?: string 
+            }
+            kind?: string
+            _message?: string
+        }
+    } 
+    _message?: string
+
+}
