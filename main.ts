@@ -1,15 +1,14 @@
 import mongoose from "mongoose"
+import { load } from "https://deno.land/std@0.204.0/dotenv/mod.ts";
 // @deno-types="npm:@types/express@4"
 import express from "express";
 import { base, post_student, post_subject, post_teacher } from "./resolvers/Posts.ts";
 import { update_student } from "./resolvers/update.ts";
 
-const MONGO_URL = Deno.env.get("MONGO_URL")
+const env = await load()
+const MONGO_URL = Deno.env.get("MONGO_URL") || env["MONGO_URL"]
 
-if (!MONGO_URL) {
-  console.log("No mongo URL found");
-  Deno.exit(1);
-}
+
 
 await mongoose.connect(MONGO_URL)
 
