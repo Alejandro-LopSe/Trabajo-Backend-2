@@ -1,5 +1,5 @@
 // deno-lint-ignore-file
-
+import mongoose from "mongoose"
 import { Studentmodel, Studentmodeltype } from "../mongo/models/student.ts";
 import { Subjectmodel, Subjectmodeltype } from "../mongo/models/subject.ts";
 import { Teachermodel, Teachermodeltype } from "../mongo/models/teacher.ts";
@@ -65,7 +65,7 @@ export const geterror = (error: any): Errormongo[]=>{
     }
     console.log(error.message);
     
-    return [{code: 0},EM]
+    return [{code: -1, _message: error.message},EM]
 }
 
 export const getsubject = async ( elem: Subjectmodeltype): Promise<Subject> => {
@@ -162,8 +162,23 @@ export const getteacher = async ( elem: Teachermodeltype): Promise<Teacher> => {
 
 export const updatestudent = async ( elem: Studentmodeltype, _id: string): Promise<Student> => {
 
+    const estudiante = await Studentmodel.findById(_id)
 
-    const estudiante = await Studentmodel.findByIdAndUpdate({_id: _id},{name: elem.name, email: elem.email, $push: { subjects: elem.subjects}})
+    var update= ({
+        name: elem.name || estudiante!.name,
+        email: elem.email || estudiante!.email,
+
+        //chequeo de que no se repitan asignaturas
+        subjects: elem.subjects.reduce((acc: mongoose.Types.ObjectId[],elem: mongoose.Types.ObjectId)=>{
+            if(!(estudiante!.subjects.includes(elem))){
+                return [...acc,elem]
+            }
+            return [...acc]
+        },[])
+    })
+    console.log(update);
+    
+    const estudiante_updated =  await Studentmodel.updateOne({_id: estudiante!._id},{name: update.name, email: update.email, $push: { subjects: update.subjects}})
     const final = await getstudent(estudiante!)
     return  final
 

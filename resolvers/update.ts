@@ -34,47 +34,4 @@ export const update_student = async (req: Request<{},{},Studentmodeltype>, res: 
         res.status(400).send(me)
     }
 }
-export const post_teacher= async (req: Request<{},{},Teachermodeltype>, res: Response<Teacher | Errormongo[]>)=>{
-
-    try{
-
-        const {name,email,subjects} = req.body
-        const teacher = new Teachermodel({
-            name,
-            email,
-            subjects
-        })
-        await teacher.save()
-        const final = await getteacher(teacher)
-        res.status(200).send(final)
-
-
-    }catch(error){
-        const me: Errormongo[] = geterror(error)
-
-        res.status(400).send(me)
-        
-    }
-}
-export const post_subject= async (req: Request<{},{},Subjectmodeltype>, res: Response<Subject | Errormongo[]>)=>{
-
-    try{
-        const {name, year,teacher,students} = req.body
-        const subject = new Subjectmodel({
-            name,
-            year,
-            teacher,
-            students
-        })
-
-        await subject.save()
-        const final = await getsubject(subject)
-        res.status(200).send(final)
-
-    }catch(error){
-        const me: Errormongo[] = geterror(error)
-
-        res.status(400).send(me)
-    }
-}
 

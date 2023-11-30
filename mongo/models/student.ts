@@ -8,8 +8,9 @@ const Schema = mongoose.Schema
 const studentschema = new Schema({
     name: {type: String, required: true, unique:true},
     email: {type: String, required: true},
-    subjects: [{type: Schema.Types.ObjectId}]
+    subjects: [{type: Schema.Types.ObjectId, unique: true}]
 })
+
 
 studentschema.path("name").validate(async (e)=>{
 
@@ -40,8 +41,12 @@ studentschema.path("subjects").validate(async (subjects)=>{
 })
 
 studentschema.post(`save`,async (next)=>{
-   const fin =  await Subjectmodel.findByIdAndUpdate({$in: next.subjects},{$push: {students: next.id}})
-   console.log(fin);
-})
+    const fin =  await Subjectmodel.findByIdAndUpdate({$in: next.subjects},{$push: {students: next.id}})
+    console.log(fin);
+ })
+ /*studentschema.pre(`updateOne`,async (next)=>{
+    const fin =  await Subjectmodel.findByIdAndUpdate({$in: next.subjects},{$push: {students: next.id}})
+    console.log(fin);
+ })*/
 export type Studentmodeltype = mongoose.Document & Omit<Student,"id" | "subjects"> & {subjects: mongoose.Types.ObjectId[] }
 export const Studentmodel = mongoose.model<Studentmodeltype>("Student",studentschema)
