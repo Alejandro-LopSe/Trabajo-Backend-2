@@ -8,7 +8,7 @@ const Schema = mongoose.Schema
 const studentschema = new Schema({
     name: {type: String, required: true, unique:true},
     email: {type: String, required: true},
-    subjects: [{type: Schema.Types.ObjectId, unique: true}]
+    subjects: [{type: Schema.Types.ObjectId}]
 })
 
 
@@ -40,13 +40,35 @@ studentschema.path("subjects").validate(async (subjects)=>{
     }
 })
 
-studentschema.post(`save`,async (next)=>{
-    const fin =  await Subjectmodel.findByIdAndUpdate({$in: next.subjects},{$push: {students: next.id}})
+studentschema.post(`save`,async function (next){
+    const fin =  await Subjectmodel.findByIdAndUpdate({$in: this.subjects},{$push: {students: this.id}})
     console.log(fin);
  })
- /*studentschema.pre(`updateOne`,async (next)=>{
-    const fin =  await Subjectmodel.findByIdAndUpdate({$in: next.subjects},{$push: {students: next.id}})
-    console.log(fin);
- })*/
+studentschema.pre(`findOneAndUpdate`,async function(next){
+    const query =  this.getQuery()
+    const updoc =  this.getUpdate()
+
+    const actdoc = await this.model.findById(query._id)
+    const newupdoc =  this.getUpdate()
+
+    //@ts-expect-error<se que $push existe>
+    const final_update = updoc!.$push.subjects.reduce((acc: mongoose.Types.ObjectId[],elem: mongoose.Types.ObjectId)=>{
+        if(!(actdoc!.subjects.includes(elem))){
+            return [...acc,elem]
+        }
+        return [...acc]
+    },[])
+
+    this.setUpdate({
+        //@ts-expect-error<se que $push existe>
+        name: updoc!.name,
+        //@ts-expect-error<se que $push existe>
+        email: updoc!.email,
+        $push: { subjects: final_update}
+    })
+
+    const final_up = this.getUpdate()
+    next()
+})
 export type Studentmodeltype = mongoose.Document & Omit<Student,"id" | "subjects"> & {subjects: mongoose.Types.ObjectId[] }
 export const Studentmodel = mongoose.model<Studentmodeltype>("Student",studentschema)

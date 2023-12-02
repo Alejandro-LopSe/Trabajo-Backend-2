@@ -169,17 +169,14 @@ export const updatestudent = async ( elem: Studentmodeltype, _id: string): Promi
         email: elem.email || estudiante!.email,
 
         //chequeo de que no se repitan asignaturas
-        subjects: elem.subjects.reduce((acc: mongoose.Types.ObjectId[],elem: mongoose.Types.ObjectId)=>{
-            if(!(estudiante!.subjects.includes(elem))){
-                return [...acc,elem]
-            }
-            return [...acc]
-        },[])
+        subjects: elem.subjects/**/
     })
-    console.log(update);
+    const estudiante_updated =  await Studentmodel.findByIdAndUpdate(
+        {_id: estudiante!._id},
+        {name: update.name, email: update.email, $push: { subjects: update.subjects}}
+    )
+    const final = await getstudent(estudiante_updated!)
     
-    const estudiante_updated =  await Studentmodel.updateOne({_id: estudiante!._id},{name: update.name, email: update.email, $push: { subjects: update.subjects}})
-    const final = await getstudent(estudiante!)
     return  final
 
 }
