@@ -168,17 +168,17 @@ export const updatestudent = async ( elem: Studentmodeltype, _id: string): Promi
     const estudiante = await Studentmodel.findById(_id)
 
     var update= ({
+
+        //para que no se vacien los campos si no  cambian
         name: elem.name || estudiante!.name,
         email: elem.email || estudiante!.email,
-
-        //chequeo de que no se repitan asignaturas
-        subjects: elem.subjects/**/
+        subjects: elem.subjects
     })
     const estudiante_updated =  await Studentmodel.findOneAndUpdate(
         {estudiante},
         {name: update.name, email: update.email, $push: { subjects: update.subjects}}
-    )
-;
+    );
+
     
     const final = await getstudent(estudiante!)
     
