@@ -40,9 +40,10 @@ studentschema.path("subjects").validate(async (subjects)=>{
     }
 })
 
-studentschema.post(`save`,async function (next){
+studentschema.post(`save`,async function (doc,next){
     const fin =  await Subjectmodel.findByIdAndUpdate({$in: this.subjects},{$push: {students: this.id}})
     console.log(fin);
+    next()
  })
 studentschema.pre(`findOneAndUpdate`,function(next){
     const query =  this.getQuery()
