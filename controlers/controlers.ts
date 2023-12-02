@@ -31,7 +31,7 @@ export const geterror = (error: any): Errormongo[]=>{
                 type: EM.errors?.[elem].kind
             }
         })
-
+        console.log(error);
         return errores
     }else if(error.name ==="CastError"){
         if( error.kind ==="ObjectId" ){
@@ -48,6 +48,7 @@ export const geterror = (error: any): Errormongo[]=>{
             }]
             return errores
         }
+        console.log(error);
         return [error]
         
     }else if(error.message.includes("Cannot destructure property '_id'")){
@@ -60,10 +61,11 @@ export const geterror = (error: any): Errormongo[]=>{
             value: error.value,
             type: "Not Found"
         }]
+        console.log(error);
         return errores
         
     }
-    console.log(error.message);
+    console.log(error);
     
     return [{code: -1, _message: error.message},EM]
 }
@@ -99,7 +101,8 @@ export const getstudent = async ( elem: Studentmodeltype): Promise<Student> => {
 
 
     const {_id} = elem
-
+    console.log(elem);
+    
     const est = await Studentmodel.findById(_id)
     const subs: Subject[] = await Subjectmodel.find({_id: {$in: est!.subjects}})
     const sub = await  Promise.all(subs.map(async (elem)=>{
@@ -171,11 +174,13 @@ export const updatestudent = async ( elem: Studentmodeltype, _id: string): Promi
         //chequeo de que no se repitan asignaturas
         subjects: elem.subjects/**/
     })
-    const estudiante_updated =  await Studentmodel.findByIdAndUpdate(
-        {_id: estudiante!._id},
+    const estudiante_updated =  await Studentmodel.findOneAndUpdate(
+        {estudiante},
         {name: update.name, email: update.email, $push: { subjects: update.subjects}}
     )
-    const final = await getstudent(estudiante_updated!)
+;
+    
+    const final = await getstudent(estudiante!)
     
     return  final
 

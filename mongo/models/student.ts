@@ -44,16 +44,15 @@ studentschema.post(`save`,async function (next){
     const fin =  await Subjectmodel.findByIdAndUpdate({$in: this.subjects},{$push: {students: this.id}})
     console.log(fin);
  })
-studentschema.pre(`findOneAndUpdate`,async function(next){
+studentschema.pre(`findOneAndUpdate`,function(next){
     const query =  this.getQuery()
     const updoc =  this.getUpdate()
-
-    const actdoc = await this.model.findById(query._id)
+    console.log(query,"------------------");
     const newupdoc =  this.getUpdate()
 
     //@ts-expect-error<se que $push existe>
     const final_update = updoc!.$push.subjects.reduce((acc: mongoose.Types.ObjectId[],elem: mongoose.Types.ObjectId)=>{
-        if(!(actdoc!.subjects.includes(elem))){
+        if(!(query.estudiante!.subjects.includes(elem))){
             return [...acc,elem]
         }
         return [...acc]
@@ -67,7 +66,6 @@ studentschema.pre(`findOneAndUpdate`,async function(next){
         $push: { subjects: final_update}
     })
 
-    const final_up = this.getUpdate()
     next()
 })
 export type Studentmodeltype = mongoose.Document & Omit<Student,"id" | "subjects"> & {subjects: mongoose.Types.ObjectId[] }
