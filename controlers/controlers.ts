@@ -6,6 +6,58 @@ import { Teachermodel, Teachermodeltype } from "../mongo/models/teacher.ts";
 import { Subject, Teacher,Student, Errormongo} from "../mongo/types.ts";
 
 
+
+//gestion de subjects
+export const checksubjects = (update: any,estudent: Studentmodeltype )=>{
+
+    if(update.$push && estudent.subjects.length>0){
+
+        const checked = update.$push.subjects.reduce((acc: mongoose.Types.ObjectId[],elem: mongoose.Types.ObjectId)=>{
+            const check = (estudent.subjects.some((e: mongoose.Types.ObjectId)=>e.equals(elem)))
+            if(!check){
+                return [...acc,elem]
+            }
+            return [...acc]
+        },[])
+
+        return {
+            name: update.name,
+            email: update.email,
+            $push: { subjects: checked}
+        }
+        
+
+    }
+    /*
+
+    para el caso de que se pudieran eliminar asignaturas en el update de alumnos
+
+
+    else if(update.$pull && estudent.subjects.length>0){
+       var x=0
+        const checked = update.$pull.subjects.reduce((acc: mongoose.Types.ObjectId[],elem: mongoose.Types.ObjectId)=>{
+            const check = (estudent.subjects.some((e: mongoose.Types.ObjectId)=>e.equals(elem)))
+            
+            if(!check){
+                return [...acc,elem]
+            }
+            return [...acc]
+            
+        },[])   
+
+        console.log("\npull->",checked,"\n");
+
+
+        return {
+            name: update.name,
+            email: update.email,
+            subjects: checked
+        }
+    }*/
+    
+    return update
+}
+
 //Gestion de errores
 export const geterror = (error: any): Errormongo[]=>{
 
@@ -69,20 +121,19 @@ export const geterror = (error: any): Errormongo[]=>{
     
     return [{code: -1, _message: error.message},EM]
 }
-
 export const getsubject = async ( elem: Subjectmodeltype): Promise<Subject> => {
 
 
     const {_id,name,year,teacher,students} = elem
+    const sub = await Subjectmodel.findById(_id)
+    const tea = await Teachermodel.findById(sub?.teacher)
 
-    const tea = await Teachermodel.findById(teacher)
-
-    const est = await Studentmodel.find({_id: {$in: students}})
+    const est = await Studentmodel.find({_id: {$in: sub!.students}})
 
     return {
         id: _id.toString(),
-        name: name,
-        year: year,
+        name: name || sub!.name,
+        year: year || sub!.year,
         teacher: {
             id: tea!._id,
             name: tea!.name,
@@ -101,10 +152,10 @@ export const getstudent = async ( elem: Studentmodeltype): Promise<Student> => {
 
 
     const {_id} = elem
-    console.log(elem);
     
     const est = await Studentmodel.findById(_id)
     const subs: Subject[] = await Subjectmodel.find({_id: {$in: est!.subjects}})
+    
     const sub = await  Promise.all(subs.map(async (elem)=>{
         const teacher = await Teachermodel.findById(elem.teacher)
         return {
@@ -167,17 +218,17 @@ export const updatestudent = async ( elem: Studentmodeltype, _id: string): Promi
 
     const estudiante = await Studentmodel.findById(_id)
 
-    var update= ({
+    const update= {
 
         //para que no se vacien los campos si no  cambian
         name: elem.name || estudiante!.name,
         email: elem.email || estudiante!.email,
-        subjects: elem.subjects
-    })
-    const estudiante_updated =  await Studentmodel.findOneAndUpdate(
-        {estudiante},
-        {name: update.name, email: update.email, $push: { subjects: update.subjects}}
-    );
+        
+        
+    }
+    
+//@ts-expect-error>
+    const estudiante_updated =  await Studentmodel.findOneAndUpdate(estudiante,{name: update.name,email: update.email, $push: {subjects: elem.subjects}/*subjects: []*/});
 
     
     const final = await getstudent(estudiante!)

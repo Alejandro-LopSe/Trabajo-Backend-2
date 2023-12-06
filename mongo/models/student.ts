@@ -2,6 +2,7 @@
 import mongoose from "mongoose"
 import { Student} from "../types.ts"
 import { Subjectmodel } from "./subject.ts";
+import {checksubjects} from  "../../controlers/controlers.ts"
 
 const Schema = mongoose.Schema
 
@@ -19,8 +20,6 @@ studentschema.path("name").validate(async (e)=>{
 
     return true
 })
-
-
 studentschema.path("subjects").validate(async (subjects)=>{
 
     try {
@@ -42,32 +41,27 @@ studentschema.path("subjects").validate(async (subjects)=>{
 
 studentschema.post(`save`,async function (doc,next){
     const fin =  await Subjectmodel.findByIdAndUpdate({$in: this.subjects},{$push: {students: this.id}})
-    console.log(fin);
+    console.log(fin)
     next()
  })
-studentschema.pre(`findOneAndUpdate`,function(next){
+ studentschema.pre(`findOneAndUpdate`,async function(next){
     const query =  this.getQuery()
     const updoc =  this.getUpdate()
-    console.log(query,"------------------");
-    const newupdoc =  this.getUpdate()
-
-    //@ts-expect-error<se que $push existe>
-    const final_update = updoc!.$push.subjects.reduce((acc: mongoose.Types.ObjectId[],elem: mongoose.Types.ObjectId)=>{
-        if(!(query.estudiante!.subjects.includes(elem))){
-            return [...acc,elem]
-        }
-        return [...acc]
-    },[])
-
-    this.setUpdate({
-        //@ts-expect-error<se que $push existe>
-        name: updoc!.name,
-        //@ts-expect-error<se que $push existe>
-        email: updoc!.email,
-        $push: { subjects: final_update}
-    })
-
+    
+        //@ts-expect-error>
+        const final_update = checksubjects(updoc,query)
+        console.log(query);
+        const f = await Subjectmodel.findByIdAndUpdate({$in: final_update.$push.subjects}, {$push: {students: query.id}})
+        console.log(f);
+        console.log(1);
+        
+        this.setUpdate(final_update)
+        
+    
+    
     next()
 })
+
+
 export type Studentmodeltype = mongoose.Document & Omit<Student,"id" | "subjects"> & {subjects: mongoose.Types.ObjectId[] }
 export const Studentmodel = mongoose.model<Studentmodeltype>("Student",studentschema)

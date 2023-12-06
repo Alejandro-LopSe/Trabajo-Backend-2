@@ -26,3 +26,20 @@ export const get_student = async (req: Request<{_id: string},{},{}>, res: Respon
         res.status(400).send(me)
     }
 }
+
+export const get_subject = async (req: Request<{_id: string},{},{}>, res: Response<Subject | Errormongo[]>)=>{
+
+    try{
+        const {_id} = req.params
+        const subject = new Subjectmodel({
+            _id: _id
+        })
+        const final = await getsubject(subject)
+        res.status(200).send(final)
+
+    }catch(error){
+        const me: Errormongo[] = geterror(error)
+
+        res.status(400).send(me)
+    }
+}
