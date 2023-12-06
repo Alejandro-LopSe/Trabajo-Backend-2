@@ -81,9 +81,10 @@ subjectschema.path("year").validate( function (year: number) {
 })
 
 //despues de save añadimos la asignatura al profesor y a los estudiantes si hay
-subjectschema.post(`save`,async (next)=>{ 
-    const prof = await Teachermodel.findByIdAndUpdate(next.teacher,{$push: {subjects: next.id}})
-    const stud = await Studentmodel.findByIdAndUpdate({$in: next.students},{$push: {subjects: next.id}})
+subjectschema.post(`save`,async (doc,next)=>{ 
+    const prof = await Teachermodel.findByIdAndUpdate(doc.teacher,{$push: {subjects: doc.id}})
+    const stud = await Studentmodel.findByIdAndUpdate({$in: doc.students},{$push: {subjects: doc.id}})
+    next()
 })
 
 export type Subjectmodeltype = mongoose.Document & Omit<Subject,"id" | "students" | "teacher"> & {

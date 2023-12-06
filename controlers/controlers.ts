@@ -6,7 +6,7 @@ import { Teachermodel, Teachermodeltype } from "../mongo/models/teacher.ts";
 import { Subject, Teacher,Student, Errormongo} from "../mongo/types.ts";
 
 
-
+//otros------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //gestion de subjects
 export const checksubjects = (update: any,estudent: Studentmodeltype )=>{
 
@@ -57,7 +57,6 @@ export const checksubjects = (update: any,estudent: Studentmodeltype )=>{
     
     return update
 }
-
 //Gestion de errores
 export const geterror = (error: any): Errormongo[]=>{
 
@@ -121,6 +120,9 @@ export const geterror = (error: any): Errormongo[]=>{
     
     return [{code: -1, _message: error.message},EM]
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//gets
 export const getsubject = async ( elem: Subjectmodeltype): Promise<Subject> => {
 
 
@@ -128,6 +130,7 @@ export const getsubject = async ( elem: Subjectmodeltype): Promise<Subject> => {
     const sub = await Subjectmodel.findById(_id)
     const tea = await Teachermodel.findById(sub?.teacher)
 
+ 
     const est = await Studentmodel.find({_id: {$in: sub!.students}})
 
     return {
@@ -182,10 +185,13 @@ export const getteacher = async ( elem: Teachermodeltype): Promise<Teacher> => {
 
     const {_id,name,email,subjects} = elem
 
+    const tea = await Teachermodel.findById(_id)
+
     
     //array de asignaturas
-    const sub: Subject[]= await Subjectmodel.find({_id: {$in: subjects}})
-
+    const sub: Subject[]= await Subjectmodel.find({_id: {$in:  tea!.subjects}})
+    console.log(sub);
+    
     //array de estudiantes en cada asignatura
     const subjectsarr: Subject[]= await Promise.all(sub.map(async (sub): Promise<Subject>=>{
 
@@ -207,8 +213,8 @@ export const getteacher = async ( elem: Teachermodeltype): Promise<Teacher> => {
 
     return {
         id: _id.toString(),
-        name: name,
-        email: email,
+        name: name || tea!.name,
+        email: email || tea!.email,
         subjects: subjectsarr
     }
     
